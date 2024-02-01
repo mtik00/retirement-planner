@@ -1,0 +1,1 @@
+I'm not a financial planner... fuck off.  I am literally some dumb ass on the internet.  If you think this code is inaccurate or causes you immense emotional and/or financial pain, you are also a dumb ass.  Welcome to the club!  We're pleased to have you.  However, don't come at me with your bullshit.
