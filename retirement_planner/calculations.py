@@ -70,7 +70,7 @@ def calculate_scenario(
     )
 
     for age in range(starting_age, starting_age + max_number_of_years):
-        starting_balance = total_balance
+        start_of_year_balance = total_balance
         inflation = get_previous(age, INFLATION)
         fixed_income = get_previous(age, FIXED_INCOME)
         yield_rate = get_previous(age, ANNUAL_YIELD)
@@ -80,7 +80,7 @@ def calculate_scenario(
 
         # Calculate the yield as if all distributions were taken on day 1 and
         # before fixed income (most pessimistic view).
-        left_overs = starting_balance - distributions
+        left_overs = total_balance - distributions
         earnings = yield_rate * left_overs
 
         # Add everything together
@@ -89,7 +89,7 @@ def calculate_scenario(
         print(
             row.format(
                 str(age),
-                locale.currency(starting_balance, grouping=True),
+                locale.currency(start_of_year_balance, grouping=True),
                 locale.currency(fixed_income, grouping=True),
                 locale.currency(distributions, grouping=True),
                 locale.currency(earnings, grouping=True),
@@ -100,11 +100,15 @@ def calculate_scenario(
         if total_balance < 0:
             print(f"You're broke at {age}")
             break
+    else:
+        print(
+            f"Congradulations!  You made it to {age} years old and turned {locale.currency(starting_balance, grouping=True)} into {locale.currency(total_balance, grouping=True)}"
+        )
 
 
 def main():
     calculate_scenario(
-        starting_balance=1_000_000,
+        starting_balance=10_000_000,
         starting_age=60,
         starting_distribution=100_000,
         max_number_of_years=100,
