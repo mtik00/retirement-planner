@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import locale
+from dataclasses import dataclass
 
-
-locale.setlocale(locale.LC_ALL, "")
 
 INFLATION = {
     1: 0.03,
@@ -29,6 +27,16 @@ ANNUAL_YIELD = {
 }
 
 
+@dataclass
+class Iteration:
+    age: int
+    start_of_year_balance: float
+    fixed_income: float
+    distributions: float
+    earnings: float
+    total_balance: float
+
+
 def get_previous(value, lookup: dict):
     """Search a dictionary for a value < the key."""
     keys = sorted(lookup.keys())
@@ -45,7 +53,10 @@ def calculate_scenario(
     starting_age: int,
     starting_distribution,
     max_number_of_years=100,
-):
+    inflation_table: dict[int, float] = INFLATION,
+    fixed_income_table: dict[int, int] = FIXED_INCOME,
+    yield_table: dict[int, float] = ANNUAL_YIELD,
+) -> list[Iteration]:
     """
     The annual calculation is:
         start - (distribution * inflation) - distributions + yield + fixed income.
@@ -54,26 +65,15 @@ def calculate_scenario(
     deductions are taken at the start of the year, earnings are then calculated from
     that amount, then fixed income is added to the total.
     """
+    result = []
     total_balance = starting_balance
     distributions = starting_distribution
 
-    row = "{:5s} {:20s} {:20s} {:20s} {:20s} {:20s}"
-    print(
-        row.format(
-            "age",
-            "starting balance",
-            "fixed income",
-            "withdrawal",
-            "earnings",
-            "ending balance",
-        )
-    )
-
     for age in range(starting_age, starting_age + max_number_of_years):
         start_of_year_balance = total_balance
-        inflation = get_previous(age, INFLATION)
-        fixed_income = get_previous(age, FIXED_INCOME)
-        yield_rate = get_previous(age, ANNUAL_YIELD)
+        inflation = get_previous(age, inflation_table)
+        fixed_income = get_previous(age, fixed_income_table)
+        yield_rate = get_previous(age, yield_table)
 
         # Increase annual distribution amount based on inflation
         distributions = distributions * (1 + inflation)
@@ -86,24 +86,21 @@ def calculate_scenario(
         # Add everything together
         total_balance = left_overs + fixed_income + earnings
 
-        print(
-            row.format(
-                str(age),
-                locale.currency(start_of_year_balance, grouping=True),
-                locale.currency(fixed_income, grouping=True),
-                locale.currency(distributions, grouping=True),
-                locale.currency(earnings, grouping=True),
-                locale.currency(total_balance, grouping=True),
+        result.append(
+            Iteration(
+                age,
+                start_of_year_balance,
+                fixed_income,
+                distributions,
+                earnings,
+                total_balance,
             )
         )
 
         if total_balance < 0:
-            print(f"You're broke at {age}")
             break
-    else:
-        print(
-            f"Congradulations!  You made it to {age} years old and turned {locale.currency(starting_balance, grouping=True)} into {locale.currency(total_balance, grouping=True)}"
-        )
+
+    return result
 
 
 def main():
