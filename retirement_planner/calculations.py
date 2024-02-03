@@ -6,7 +6,7 @@ from secrets import SystemRandom
 random = SystemRandom()
 
 INFLATION_RATE = {
-    1: 3,
+    1: 3.0,
     # 55: 0.04,
     # 59: 0.04,
     # 67: 0.04,
@@ -22,10 +22,10 @@ FIXED_INCOME = {
 }
 
 ANNUAL_YIELD_RATE = {
-    55: 7,
-    65: 6,
-    75: 5,
-    85: 4,
+    55: 7.0,
+    65: 6.0,
+    75: 5.0,
+    85: 4.0,
 }
 
 
