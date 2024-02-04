@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 from dataclasses import dataclass
 from secrets import SystemRandom
+import operator
+from typing import Callable
 
 random = SystemRandom()
 
@@ -42,12 +44,12 @@ class Iteration:
     crash: float
 
 
-def get_previous(value, lookup: dict):
+def get_previous(value, lookup: dict, op: Callable = operator.lt):
     """Search a dictionary for a value < the key."""
     keys = sorted(lookup.keys())
 
     for index, key in enumerate(keys[1:]):
-        if value < key:
+        if op(value, key):
             return lookup[keys[index]]
     else:
         return lookup[keys[-1]]
@@ -57,16 +59,16 @@ def calculate_scenario(
     starting_balance: int,
     starting_age: int,
     starting_distribution,
-    max_number_of_years=100,
+    age_of_death: int = 120,
     inflation_table: dict[int, float] = INFLATION_RATE,
     fixed_income_table: dict[int, int] = FIXED_INCOME,
     yield_table: dict[int, float] = ANNUAL_YIELD_RATE,
-    crash_rate: float = 5.0,
-    crash_adjustment_rate: float = 30.0,
+    crash_rate: float = 5.0,  # Percent chance a crash can happen
+    crash_adjustment_rate: float = 30.0,  # % total value decrease when a crash happens
 ) -> list[Iteration]:
     """
     The annual calculation is:
-        start - (distribution * inflation) + yield + fixed income.
+        start - market crash - (distribution * inflation) + yield + fixed income.
 
     The numbers are basic annual calculations with the most pessimistic view.  All
     deductions are taken at the start of the year, earnings are then calculated from
@@ -75,24 +77,26 @@ def calculate_scenario(
     If a market crash were to happen, it would be applied to your balance at the
     start of the calculation.
     """
-    result = []
+    result: list[Iteration] = []
     total_balance = starting_balance
     distributions = starting_distribution
 
-    for age in range(starting_age, starting_age + max_number_of_years):
+    for age in range(starting_age, age_of_death + 1):
+        start_of_year_balance = total_balance
+
         crash = 0.0
         if random.random() <= crash_rate / 100.0:
-            total_balance = int((1 - crash_adjustment_rate / 100) * total_balance)
+            crash_pct = crash_adjustment_rate / 100.0
+            total_balance -= int(total_balance * crash_pct)
             crash = crash_adjustment_rate
-
-        start_of_year_balance = total_balance
 
         inflation_rate = get_previous(age, inflation_table)
         fixed_income = get_previous(age, fixed_income_table)
         yield_rate = get_previous(age, yield_table)
 
         # Increase annual distribution amount based on inflation
-        distributions = distributions * (1 + inflation_rate / 100)
+        inflation_pct = inflation_rate / 100.0
+        distributions += distributions * inflation_pct
 
         # Calculate the yield as if all distributions were taken on day 1 and
         # before fixed income (most pessimistic view).
@@ -141,7 +145,7 @@ def monte_carlo(
     starting_balance: int,
     starting_age: int,
     starting_distribution,
-    max_number_of_years=100,
+    age_of_death=120,
     fixed_income_table: dict[int, int] = FIXED_INCOME,
     count: int = 10,
     inflation_range: tuple[float, float] = (-0.05, 5),
@@ -168,7 +172,7 @@ def monte_carlo(
             starting_balance,
             starting_age,
             starting_distribution,
-            max_number_of_years,
+            age_of_death,
             inflation_table,
             fixed_income_table,
             yield_table,

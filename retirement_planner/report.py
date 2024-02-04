@@ -67,13 +67,11 @@ def display_monte_carlo(iterations: list[MonteCarloResult]):
 
     Console().print(table)
 
-    # We're only interest in ages.  There will be lots of duplicates, which don't
-    # really matter for reporting purposes.  Ditch the duplicates and make
-    # assumptions based on that.
-    ages = sorted(list(set([x.age for x in results])))
+    # We're really only interested in ages.
+    ages = sorted([x.age for x in results])
 
     print()
-    median_age = list(ages)[int(len(ages) / 2)]
+    median_age = ages[int(len(ages) / 2)]
     print(f"Median age where money runs out: {median_age}")
     print()
 
@@ -84,6 +82,12 @@ def display_monte_carlo(iterations: list[MonteCarloResult]):
     for percentile in range(10, 96, 10):
         index = int((percentile / 100) * len(ages))
         bell = percentile if percentile < 50 else 100 - percentile
+        if percentile == 50:
+            table.add_row("---", "---")
+
         table.add_row(str(bell) + "%", str(ages[index]))
+
+        if percentile == 50:
+            table.add_row("---", "---")
 
     Console().print(table)
