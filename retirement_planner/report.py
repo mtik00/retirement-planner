@@ -40,6 +40,9 @@ def display_monte_carlo(iterations: list[MonteCarloResult]):
     """NOTE: This could use a lot of work."""
     results = sorted(iterations, reverse=True)
 
+    print(f"Results after {len(results):,} iterations.")
+    print()
+
     table = Table()
     table.add_column("Scenario")
     table.add_column("Age")

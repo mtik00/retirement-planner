@@ -82,7 +82,6 @@ def calculate_scenario(
     for age in range(starting_age, starting_age + max_number_of_years):
         crash = 0.0
         if random.random() <= crash_rate / 100.0:
-            # print("Crash at age:", age, "of", f"{crash_adjustment_rate:.1f}%")
             total_balance = int((1 - crash_adjustment_rate / 100) * total_balance)
             crash = crash_adjustment_rate
 
@@ -147,6 +146,8 @@ def monte_carlo(
     count: int = 10,
     inflation_range: tuple[float, float] = (-0.05, 5),
     yield_range: tuple[float, float] = (-2.0, 8),
+    crash_rate_range: tuple[float, float] = (0.0, 5.0),
+    crash_amount_range: tuple[float, float] = (10.0, 50.0),
 ) -> list[MonteCarloResult]:
     result: list[MonteCarloResult] = []
 
@@ -159,6 +160,10 @@ def monte_carlo(
         yield_rate = random.uniform(*yield_range)
         yield_table = {1: yield_rate}
 
+        # adjust market crashes
+        crash_range = random.uniform(*crash_rate_range)
+        crash_amount = random.uniform(*crash_amount_range)
+
         sim_result = calculate_scenario(
             starting_balance,
             starting_age,
@@ -167,6 +172,8 @@ def monte_carlo(
             inflation_table,
             fixed_income_table,
             yield_table,
+            crash_rate=crash_range,
+            crash_adjustment_rate=crash_amount,
         )
 
         result.append(
