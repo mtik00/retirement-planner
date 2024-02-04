@@ -39,6 +39,7 @@ class Iteration:
     total_balance: float
     yield_rate: float
     inflation_rate: float
+    crash: float
 
 
 def get_previous(value, lookup: dict):
@@ -60,6 +61,8 @@ def calculate_scenario(
     inflation_table: dict[int, float] = INFLATION_RATE,
     fixed_income_table: dict[int, int] = FIXED_INCOME,
     yield_table: dict[int, float] = ANNUAL_YIELD_RATE,
+    crash_rate: float = 5.0,
+    crash_adjustment_rate: float = 30.0,
 ) -> list[Iteration]:
     """
     The annual calculation is:
@@ -68,13 +71,23 @@ def calculate_scenario(
     The numbers are basic annual calculations with the most pessimistic view.  All
     deductions are taken at the start of the year, earnings are then calculated from
     that amount, then fixed income is added to the total.
+
+    If a market crash were to happen, it would be applied to your balance at the
+    start of the calculation.
     """
     result = []
     total_balance = starting_balance
     distributions = starting_distribution
 
     for age in range(starting_age, starting_age + max_number_of_years):
+        crash = 0.0
+        if random.random() <= crash_rate / 100.0:
+            # print("Crash at age:", age, "of", f"{crash_adjustment_rate:.1f}%")
+            total_balance = int((1 - crash_adjustment_rate / 100) * total_balance)
+            crash = crash_adjustment_rate
+
         start_of_year_balance = total_balance
+
         inflation_rate = get_previous(age, inflation_table)
         fixed_income = get_previous(age, fixed_income_table)
         yield_rate = get_previous(age, yield_table)
@@ -100,6 +113,7 @@ def calculate_scenario(
                 total_balance,
                 yield_rate=yield_rate,
                 inflation_rate=inflation_rate,
+                crash=crash,
             )
         )
 
@@ -115,6 +129,7 @@ class MonteCarloResult:
     inflation: float
     average_yield: float
     balance: float
+    num_crashes: int
 
     def __eq__(self, other) -> bool:
         return (self.age, self.balance) == (other.age, other.balance)
@@ -128,20 +143,20 @@ def monte_carlo(
     starting_age: int,
     starting_distribution,
     max_number_of_years=100,
-    inflation_table: dict[int, float] = INFLATION_RATE,
     fixed_income_table: dict[int, int] = FIXED_INCOME,
-    yield_table: dict[int, float] = ANNUAL_YIELD_RATE,
     count: int = 10,
+    inflation_range: tuple[float, float] = (-0.05, 5),
+    yield_range: tuple[float, float] = (-2.0, 8),
 ) -> list[MonteCarloResult]:
     result: list[MonteCarloResult] = []
 
     for _ in range(count):
         # adjust inflation
-        inflation = random.uniform(0, 3)
+        inflation = random.uniform(*inflation_range)
         inflation_table = {1: inflation}
 
         # adjust yield
-        yield_rate = random.uniform(-2, 8)
+        yield_rate = random.uniform(*yield_range)
         yield_table = {1: yield_rate}
 
         sim_result = calculate_scenario(
@@ -160,6 +175,7 @@ def monte_carlo(
                 inflation=inflation,
                 average_yield=sum(yield_table.values()) / len(yield_table),
                 balance=sim_result[-1].total_balance,
+                num_crashes=sum([1 if x.crash else 0 for x in sim_result]),
             )
         )
 

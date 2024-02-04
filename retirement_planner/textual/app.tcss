@@ -1,0 +1,10 @@
+Static {
+    content-align: center middle;
+    background: blue;
+    height: 3;
+    width: 15;
+}
+
+.column {
+    width: 1fr;
+}
