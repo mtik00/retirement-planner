@@ -144,14 +144,14 @@ class MonteCarloResult:
 def monte_carlo(
     starting_balance: int,
     starting_age: int,
-    starting_distribution,
-    age_of_death=120,
+    starting_distribution: int,
+    age_of_death: int = 120,
     fixed_income_table: dict[int, int] = FIXED_INCOME,
     count: int = 10,
     inflation_range: tuple[float, float] = (-0.05, 5),
     yield_range: tuple[float, float] = (-2.0, 8),
-    crash_rate_range: tuple[float, float] = (0.0, 5.0),
-    crash_amount_range: tuple[float, float] = (10.0, 50.0),
+    crash_rate_range: tuple[float, float] = (0.0, 3.0),
+    crash_amount_range: tuple[float, float] = (5.0, 30.0),
 ) -> list[MonteCarloResult]:
     result: list[MonteCarloResult] = []
 
@@ -198,7 +198,7 @@ def main():
         starting_balance=10_000_000,
         starting_age=60,
         starting_distribution=100_000,
-        max_number_of_years=100,
+        age_of_death=100,
     )
 
 
