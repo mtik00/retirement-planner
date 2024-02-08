@@ -73,6 +73,10 @@ def display_monte_carlo(iterations: list[MonteCarloResult]):
     print()
     median_age = ages[int(len(ages) / 2)]
     print(f"Median age where money runs out: {median_age}")
+
+    deaths = sorted([x.age_of_death for x in results])
+    median_age_of_death = deaths[int(len(deaths) / 2)]
+    print(f"Median age of death: {median_age_of_death}")
     print()
 
     table = Table()

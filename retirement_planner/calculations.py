@@ -129,6 +129,7 @@ def calculate_scenario(
 @dataclass
 class MonteCarloResult:
     age: int
+    age_of_death: int
     inflation: float
     average_yield: float
     balance: float
@@ -145,7 +146,7 @@ def monte_carlo(
     starting_balance: int,
     starting_age: int,
     starting_distribution: int,
-    age_of_death: int = 120,
+    age_of_death_range: tuple[int, int] = (95, 120),
     fixed_income_table: dict[int, int] = FIXED_INCOME,
     count: int = 10,
     inflation_range: tuple[float, float] = (-0.05, 5),
@@ -168,6 +169,9 @@ def monte_carlo(
         crash_range = random.uniform(*crash_rate_range)
         crash_amount = random.uniform(*crash_amount_range)
 
+        # when will you die?
+        age_of_death = random.randint(*age_of_death_range)
+
         sim_result = calculate_scenario(
             starting_balance,
             starting_age,
@@ -183,6 +187,7 @@ def monte_carlo(
         result.append(
             MonteCarloResult(
                 age=sim_result[-1].age,
+                age_of_death=age_of_death,
                 inflation=inflation,
                 average_yield=sum(yield_table.values()) / len(yield_table),
                 balance=sim_result[-1].total_balance,
